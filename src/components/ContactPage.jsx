@@ -26,8 +26,8 @@ function ContactPage() {
       <p className="hero-kicker">Contact 70X7</p>
       <h1>Send us a message.</h1>
       <p className="contact-intro">
-        Questions about sizing, shipping, or upcoming drops? Fill this form and
-        our team will get back to you.
+        Questions about sizing, shipping, or upcoming faith-based drops? Fill
+        this form and our team will get back to you.
       </p>
 
       <form className="contact-form" onSubmit={handleSubmit}>

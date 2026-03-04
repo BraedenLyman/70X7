@@ -6,9 +6,10 @@ function Footer() {
   return (
     <footer className="site-footer">
       <div className="site-footer__inner">
-        <p className="site-footer__brand">70X7 Gymwear</p>
+        <p className="site-footer__brand">70X7</p>
+        <p className="site-footer__tagline">Seventy times seven – endless forgiveness.</p>
         <p className="site-footer__copy">
-          Built to perform. &copy; {year} 70X7. All rights reserved.
+          Built on faith. Forged with purpose. &copy; {year} 70X7. All rights reserved.
         </p>
         <nav aria-label="Footer" className="site-footer__links">
           <Link to="/shipping">Shipping</Link>
