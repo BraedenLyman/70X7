@@ -44,6 +44,13 @@ function AboutPage() {
         </article>
       </section>
 
+      <section className="about-card">
+        <h2>Helping Those In Need</h2>
+        <p>
+          We believe in giving back. That’s why a portion of the proceeds from every purchase helps support the homeless and people in need. Your support allows us to make a small but meaningful difference in the lives of others.
+        </p>
+      </section>
+
       <section className="about-values">
         <p className="split-kicker">What We Stand For</p>
         <h2>More than apparel.</h2>

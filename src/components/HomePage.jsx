@@ -2,14 +2,18 @@ import { Link } from 'react-router-dom'
 
 const featuredCategories = [
   {
-    name: 'Teeshirt 1',
-    detail: 'Statement designs grounded in scripture and bold visual storytelling.',
-    badge: 'Best Seller',
+    id: 'tee-nwfam',
+    name: 'No Weapons Formed Against Me',
+    category: 'T-Shirt',
+    price: '$40',
+    tag: 'Popular',
   },
   {
-    name: 'Teeshirt 2',
-    detail: 'Statement designs grounded in scripture and bold visual storytelling.',
-    badge: 'New Drop',
+    id: 'tee-mstrs',
+    name: 'Moses Splitting The Red Sea',
+    category: 'T-Shirt',
+    price: '$40',
+    tag: 'Popular',
   },
 ]
 
@@ -27,34 +31,40 @@ function HomePage() {
         <h1 className="brand-name">
           70<span>X7</span>
         </h1>
-        <p className="brand-tagline">Seventy times seven – endless forgiveness.</p>
-        <h2>Wear your faith. Make a statement.</h2>
-        <p>
-          Built on faith. Forged with purpose.
-        </p>
-        <p className="hero-message">This isn’t just clothing — it’s a message.</p>
+        <p className="brand-tagline">Endless forgiveness.</p>
+        <h2>Wear your faith. <br/> Make a statement.</h2>
+      
+        <p className="hero-message">This isn’t just clothing - it’s a message.</p>
         <div className="hero-actions">
-          <Link className="btn btn-primary" to="/tshirts">
+          <Link className="btn btn-primary" to="/shop">
             Shop T-Shirts
           </Link>
-          <Link className="btn btn-secondary" to="/sweaters">
-            Shop Sweaters
-          </Link>
+        
         </div>
       </section>
 
       <section className="home-section">
         <div className="section-head">
-          <p>Featured categories</p>
+          <p>Featured Shirts</p>
           <h3>Wear conviction with confidence.</h3>
         </div>
-        <div className="card-grid">
+        <div className="shop-grid featured-grid">
           {featuredCategories.map((item) => (
-            <article key={item.name} className="feature-card">
-              <span className="feature-badge">{item.badge}</span>
-              <h4>{item.name}</h4>
-              <p>{item.detail}</p>
-              <Link to="/shop">Explore</Link>
+            <article key={item.id} className="product-card">
+              <div className="product-card__image" aria-hidden="true">
+                <span>{item.category}</span>
+              </div>
+              <div className="product-card__content">
+                <p className="product-card__tag">{item.tag}</p>
+                <h2>{item.name}</h2>
+                <p className="product-card__meta">{item.category}</p>
+              </div>
+              <div className="product-card__bottom">
+                <strong>{item.price}</strong>
+                <Link className="btn btn-primary" to="/shop">
+                  Explore
+                </Link>
+              </div>
             </article>
           ))}
         </div>

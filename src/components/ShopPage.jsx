@@ -1,26 +1,26 @@
 const shopItems = [
   {
-    id: 'tee-core-black',
-    name: 'Core Lift Tee',
+    id: 'tee-nwfam',
+    name: 'No Weapons Formed Against Me',
     category: 'T-Shirt',
-    color: 'Black',
-    price: '$42',
-    tag: 'Best Seller',
+    //color: 'Black',
+    price: '$40',
+    tag: 'Popular',
   },
   {
-    id: 'tee-blood-red',
-    name: 'Bloodline Oversized Tee',
+    id: 'tee-mstrs',
+    name: 'Moses Splitting The Red Sea',
     category: 'T-Shirt',
-    color: 'Red',
-    price: '$46',
-    tag: 'New',
+    //color: 'Red',
+    price: '$40',
+    tag: 'Popular',
   },
   {
-    id: 'tee-pr-day',
-    name: 'PR Day Tee',
+    id: 'tee-dagf',
+    name: 'David & Goliath Fight',
     category: 'T-Shirt',
     color: 'Black',
-    price: '$44',
+    price: '$40',
     tag: 'Popular',
   },
 ]
@@ -59,15 +59,17 @@ function ShopPage() {
               <p className="product-card__tag">{item.tag}</p>
               <h2>{item.name}</h2>
               <p className="product-card__meta">
-                {item.category} | {item.color}
+                {item.category} {item.color}
               </p>
-              <div className="product-card__bottom">
+            </div>
+
+             <div className="product-card__bottom">
                 <strong>{item.price}</strong>
                 <button className="btn btn-primary" type="button">
                   Add to Cart
                 </button>
               </div>
-            </div>
+              
           </article>
         ))}
       </section>

@@ -35,3 +35,40 @@ body {
     radial-gradient(circle at 85% 86%, rgba(196, 200, 206, 0.12), transparent 40%),
     linear-gradient(145deg, #070707 0%, #0e0e0e 54%, #141414 100%);
 }
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  color: var(--color-text);
+  font-family: var(--font-heading);
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 0.95;
+  letter-spacing: 0.05em;
+}
+
+h4 {
+  line-height: 1.05;
+  letter-spacing: 0.04em;
+}
+
+p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+section,
+article {
+  display: block;
+}
+
+h3 {
+  margin: 0.4rem 0 1.1rem;
+  font-size: clamp(1.9rem, 5vw, 2.6rem);
+}
