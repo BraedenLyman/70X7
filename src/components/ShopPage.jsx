@@ -1,29 +1,5 @@
-const shopItems = [
-  {
-    id: 'tee-nwfam',
-    name: 'No Weapons Formed Against Me',
-    category: 'T-Shirt',
-    //color: 'Black',
-    price: '$40',
-    tag: 'Popular',
-  },
-  {
-    id: 'tee-mstrs',
-    name: 'Moses Splitting The Red Sea',
-    category: 'T-Shirt',
-    //color: 'Red',
-    price: '$40',
-    tag: 'Popular',
-  },
-  {
-    id: 'tee-dagf',
-    name: 'David & Goliath Fight',
-    category: 'T-Shirt',
-    color: 'Black',
-    price: '$40',
-    tag: 'Popular',
-  },
-]
+import ProductCard from './ProductCard'
+import { products } from '../data/products'
 
 function ShopPage() {
   return (
@@ -46,31 +22,12 @@ function ShopPage() {
             T-Shirts
           </button>
         </div>
-        <p className="shop-count">{shopItems.length} products</p>
+        <p className="shop-count">{products.length} products</p>
       </section>
 
       <section className="shop-grid" aria-label="Products">
-        {shopItems.map((item) => (
-          <article key={item.id} className="product-card">
-            <div className="product-card__image" aria-hidden="true">
-              <span>{item.category}</span>
-            </div>
-            <div className="product-card__content">
-              <p className="product-card__tag">{item.tag}</p>
-              <h2>{item.name}</h2>
-              <p className="product-card__meta">
-                {item.category} {item.color}
-              </p>
-            </div>
-
-             <div className="product-card__bottom">
-                <strong>{item.price}</strong>
-                <button className="btn btn-primary" type="button">
-                  Add to Cart
-                </button>
-              </div>
-              
-          </article>
+        {products.map((product) => (
+          <ProductCard key={product.id} product={product} />
         ))}
       </section>
     </>

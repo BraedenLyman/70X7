@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { HiBars3, HiXMark } from 'react-icons/hi2'
 import { Link, NavLink } from 'react-router-dom'
+import { useCart } from '../context/CartContext'
+import { scrollWindowTop } from '../utils/scrollWindowTop'
 
 function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const { cartCount } = useCart()
   const navClass = ({ isActive }) =>
     isActive ? 'site-nav__link site-nav__link-active' : 'site-nav__link'
 
@@ -15,10 +18,15 @@ function Header() {
     setIsMenuOpen(false)
   }
 
+  function handleNavClick() {
+    handleCloseMenu()
+    scrollWindowTop()
+  }
+
   return (
     <header className="site-header">
       <div className="site-header__inner">
-        <Link className="site-logo" to="/" onClick={handleCloseMenu}>
+        <Link className="site-logo" to="/" onClick={handleNavClick}>
           70<span>X7</span>
         </Link>
         <button
@@ -36,25 +44,22 @@ function Header() {
           className={`site-nav ${isMenuOpen ? 'site-nav-open' : ''}`}
           id="primary-navigation"
         >
-          <NavLink className={navClass} end to="/" onClick={handleCloseMenu}>
+          <NavLink className={navClass} end to="/" onClick={handleNavClick}>
             Home
           </NavLink>
-          <NavLink className={navClass} to="/shop" onClick={handleCloseMenu}>
+          <NavLink className={navClass} to="/shop" onClick={handleNavClick}>
             Shop
           </NavLink>
-          <NavLink className={navClass} to="/contact" onClick={handleCloseMenu}>
+          <NavLink className={navClass} to="/contact" onClick={handleNavClick}>
             Contact
           </NavLink>
-          <NavLink className={navClass} to="/about" onClick={handleCloseMenu}>
+          <NavLink className={navClass} to="/about" onClick={handleNavClick}>
             About
           </NavLink>
-          <button className="site-header__cta site-header__cta-mobile" type="button">
-            Cart
-          </button>
+          <NavLink className={navClass} to="/cart" onClick={handleNavClick}>
+            Cart ({cartCount})
+          </NavLink>
         </nav>
-        <button className="site-header__cta site-header__cta-desktop" type="button">
-          Cart
-        </button>
       </div>
     </header>
   )

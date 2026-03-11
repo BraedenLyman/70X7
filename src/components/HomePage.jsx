@@ -1,27 +1,16 @@
 import { Link } from 'react-router-dom'
-
-const featuredCategories = [
-  {
-    id: 'tee-nwfam',
-    name: 'No Weapons Formed Against Me',
-    category: 'T-Shirt',
-    price: '$40',
-    tag: 'Popular',
-  },
-  {
-    id: 'tee-mstrs',
-    name: 'Moses Splitting The Red Sea',
-    category: 'T-Shirt',
-    price: '$40',
-    tag: 'Popular',
-  },
-]
+import ProductCard from './ProductCard'
+import { featuredProductIds, products } from '../data/products'
 
 const brandPillars = [
   'Faith-led design language inspired by scripture',
   'Durable premium fabrics made for everyday life',
   'Purpose-driven drops with bold Christian messaging',
 ]
+
+const featuredProducts = products.filter((product) =>
+  featuredProductIds.includes(product.id)
+)
 
 function HomePage() {
   return (
@@ -49,23 +38,8 @@ function HomePage() {
           <h3>Wear conviction with confidence.</h3>
         </div>
         <div className="shop-grid featured-grid">
-          {featuredCategories.map((item) => (
-            <article key={item.id} className="product-card">
-              <div className="product-card__image" aria-hidden="true">
-                <span>{item.category}</span>
-              </div>
-              <div className="product-card__content">
-                <p className="product-card__tag">{item.tag}</p>
-                <h2>{item.name}</h2>
-                <p className="product-card__meta">{item.category}</p>
-              </div>
-              <div className="product-card__bottom">
-                <strong>{item.price}</strong>
-                <Link className="btn btn-primary" to="/shop">
-                  Explore
-                </Link>
-              </div>
-            </article>
+          {featuredProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
           ))}
         </div>
       </section>
