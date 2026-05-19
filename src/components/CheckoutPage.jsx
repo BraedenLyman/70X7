@@ -101,6 +101,7 @@ function CheckoutForm({ items, subtotal, clientSecret, navigate }) {
   const [shippingLoading, setShippingLoading] = useState(false)
   const addressInputRef = useRef(null)
   const [autocomplete, setAutocomplete] = useState(null)
+  const debounceTimerRef = useRef(null)
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -173,7 +174,7 @@ function CheckoutForm({ items, subtotal, clientSecret, navigate }) {
     if (!addressInputRef.current || !window.google) return
 
     const autocompleteInstance = new window.google.maps.places.Autocomplete(addressInputRef.current, {
-      componentRestrictions: { country: ['ca', 'us'] },
+      componentRestrictions: { country: ['ca'] },
       types: ['address'],
     })
 
