@@ -33,90 +33,90 @@ function ProductDetailPage() {
   }, [isCarouselPaused, product.images.length])
 
   return (
-    <>
-      <section className="product-detail-hero">
-        <p className="hero-kicker">{product.category}</p>
-        <h1>{product.name}</h1>
-        <p>{product.description}</p>
-      </section>
-
-      <section className="product-detail">
-        <div className="product-detail__gallery">
+    <div className="pdp-layout">
+      {/* ════════════════════════════════════════════════════
+          LEFT: Image Gallery
+          ════════════════════════════════════════════════════ */}
+      <div className="pdp-gallery">
+        <div
+          aria-live="polite"
+          className="pdp-gallery__frame"
+          onMouseEnter={() => setIsCarouselPaused(true)}
+          onMouseLeave={() => setIsCarouselPaused(false)}
+        >
           <div
-            aria-live="polite"
-            className="product-detail__frame"
-            onMouseEnter={() => setIsCarouselPaused(true)}
-            onMouseLeave={() => setIsCarouselPaused(false)}
+            className="pdp-gallery__track"
+            style={{ transform: `translateX(-${activeImageIndex * 100}%)` }}
           >
-            <div
-              className="product-detail__track"
-              style={{ transform: `translateX(-${activeImageIndex * 100}%)` }}
-            >
-              {product.images.map((image) => (
-                <div className="product-detail__image" key={image.id}>
-                  <span className="product-detail__image-type">{product.category}</span>
-                  <strong>{image.label}</strong>
-                  <p>{product.name}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div aria-label="Product images" className="product-detail__dots">
-            {product.images.map((image, index) => (
-              <button
-                aria-label={`View ${image.label}`}
-                aria-pressed={index === activeImageIndex}
-                className={`product-detail__dot ${
-                  index === activeImageIndex ? 'product-detail__dot-active' : ''
-                }`}
-                key={image.id}
-                onClick={() => setActiveImageIndex(index)}
-                type="button"
-              >
-                <span className="product-detail__dot-inner" />
-              </button>
+            {product.images.map((image) => (
+              <div className="pdp-gallery__slide" key={image.id}>
+                {image.src ? (
+                  <img src={image.src} alt={image.label} />
+                ) : (
+                  <>
+                    <span aria-hidden="true">✟</span>
+                    <strong>{image.label}</strong>
+                  </>
+                )}
+              </div>
             ))}
-          </div>
-
-          <div className="product-detail__status">
-            <span>
-              {activeImageIndex + 1} / {product.images.length}
-            </span>
-            <span>{isCarouselPaused ? 'Paused' : 'Auto rotating'}</span>
           </div>
         </div>
 
-        <article className="product-detail__info">
-          <p className="product-detail__tag">{product.tag}</p>
-          <h2>{product.name}</h2>
-          <p className="product-detail__meta">
-            {product.category} {product.color}
-          </p>
-          <p className="product-detail__price">{product.price}</p>
-          <p className="product-detail__copy">{product.description}</p>
-
-          <ul className="product-detail__details">
-            {product.details.map((detail) => (
-              <li key={detail}>{detail}</li>
-            ))}
-          </ul>
-
-          <div className="product-detail__actions">
+        <div aria-label="Product images" className="pdp-gallery__dots">
+          {product.images.map((image, index) => (
             <button
-              className="btn btn-primary"
-              onClick={() => addToCart(product)}
+              aria-label={`View ${image.label}`}
+              aria-pressed={index === activeImageIndex}
+              className={`pdp-gallery__dot ${
+                index === activeImageIndex ? 'pdp-gallery__dot--active' : ''
+              }`}
+              key={image.id}
+              onClick={() => setActiveImageIndex(index)}
               type="button"
-            >
-              Add to Cart
-            </button>
-            <Link className="btn btn-secondary" to="/shop">
-              Back to Shop
-            </Link>
-          </div>
-        </article>
-      </section>
-    </>
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* ════════════════════════════════════════════════════
+          RIGHT: Product Info
+          ════════════════════════════════════════════════════ */}
+      <article className="pdp-info">
+        <Link className="pdp-back" to="/shop">
+          ← Back to Shop
+        </Link>
+
+        <p className="pdp-kicker">{product.category}</p>
+
+        <h1 className="pdp-name">{product.name}</h1>
+
+        <p className="pdp-price">{product.price}</p>
+
+        <div className="pdp-divider" aria-hidden="true" />
+
+        <p className="pdp-desc">{product.description}</p>
+
+        <ul className="pdp-details">
+          {product.details.map((detail) => (
+            <li key={detail}>{detail}</li>
+          ))}
+        </ul>
+
+        <div className="pdp-actions">
+          <button
+            className="btn btn-primary"
+            onClick={() => addToCart(product)}
+            type="button"
+          >
+            Add to Cart
+          </button>
+          <Link className="btn btn-secondary" to="/shop">
+            Continue Shopping
+          </Link>
+        </div>
+      </article>
+    </div>
   )
 }
 

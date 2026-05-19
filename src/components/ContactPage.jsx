@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 
 const initialForm = {
   name: '',
@@ -22,56 +22,70 @@ function ContactPage() {
   }
 
   return (
-    <section className="contact-page">
-      <p className="hero-kicker">Contact 70X7</p>
-      <h1>Send us a message.</h1>
-      <p className="contact-intro">
-        Questions about sizing, shipping, or upcoming faith-based drops? Fill
-        this form and our team will get back to you.
-      </p>
+    <div className="contact-layout">
+      <header className="ab-hero">
+        <div className="ab-hero__left">
+          <p className="ab-kicker">Contact Us</p>
+          <h1 className="ab-hero__title">Get in Touch</h1>
+        </div>
+        <p className="ab-hero__lead" />
+        <div className="ab-hero__rule" aria-hidden="true" />
+      </header>
 
-      <form className="contact-form" onSubmit={handleSubmit}>
-        <label htmlFor="name">Name</label>
-        <input
-          id="name"
-          name="name"
-          type="text"
-          value={formData.name}
-          onChange={handleChange}
-          required
-        />
+      <div className="contact-form-panel">
+        {isSubmitted ? (
+          <div className="cp-success">
+            <span className="cp-success__icon" aria-hidden="true">
+              ✓
+            </span>
+            <h2 className="cp-success__heading">Message Sent</h2>
+            <p className="cp-success__text">Thanks for reaching out. We'll be in touch shortly.</p>
+          </div>
+        ) : (
+          <form className="contact-form-grid" onSubmit={handleSubmit}>
+            <div className="cp-field">
+              <label htmlFor="name">Name</label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                value={formData.name}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-        <label htmlFor="email">Email</label>
-        <input
-          id="email"
-          name="email"
-          type="email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-        />
+            <div className="cp-field">
+              <label htmlFor="email">Email</label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-        <label htmlFor="message">Message</label>
-        <textarea
-          id="message"
-          name="message"
-          rows="6"
-          value={formData.message}
-          onChange={handleChange}
-          required
-        />
+            <div className="cp-field">
+              <label htmlFor="message">Message</label>
+              <textarea
+                id="message"
+                name="message"
+                rows="5"
+                value={formData.message}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-        <button className="btn btn-primary" type="submit">
-          Send Message
-        </button>
-      </form>
-
-      {isSubmitted && (
-        <p className="contact-success">
-          Thanks for reaching out. Your message has been sent.
-        </p>
-      )}
-    </section>
+            <button className="btn btn-primary contact-submit" type="submit">
+              Send Message
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
   )
 }
 

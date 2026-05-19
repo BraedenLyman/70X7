@@ -18,56 +18,77 @@ const values = [
 function AboutPage() {
   return (
     <>
-      <section className="about-hero">
-        <p className="hero-kicker">About 70X7</p>
-        <h1>Built on faith and conviction.</h1>
-        <p>
-          70X7 is a Christian apparel brand created to help believers wear their
-          faith boldly through premium, statement-driven design.
-        </p>
-      </section>
+      {/* Section 1: Page Header */}
+      <header className="ab-hero">
+        <div className="ab-hero__left">
+          <p className="ab-kicker">About 70X7</p>
+          <h1 className="ab-hero__title">Our Story</h1>
+        </div>
+        <p className="ab-hero__lead" />
+        <div className="ab-hero__rule" aria-hidden="true" />
+      </header>
 
-      <section className="about-grid">
-        <article className="about-card">
-          <h2>Our Mission</h2>
-          <p>
-            We create clothing that carries scripture-inspired conviction into
-            everyday life with confidence and clarity.
+      {/* Sections 2-4: Content Grid (3-column layout) */}
+      <div className="ab-content-grid">
+        <section className="ab-section">
+          <h2 className="ab-section__heading">Built on faith and conviction.</h2>
+          <p className="ab-section__body">
+            70X7 is a Christian apparel brand created to help believers wear their faith boldly through premium, statement-driven design.
           </p>
-        </article>
-        <article className="about-card">
-          <h2>Our Standard</h2>
-          <p>
-            Meaningful messaging, quality-first production, and intentional
-            design in every release.
+        </section>
+
+        <section className="ab-section">
+          <p className="ab-kicker">Our Mission</p>
+          <h2 className="ab-section__heading">Conviction into everyday life.</h2>
+          <p className="ab-section__body">
+            We create clothing that carries scripture-inspired conviction into everyday life with
+            confidence and clarity.
           </p>
-        </article>
-      </section>
+        </section>
 
-      <section className="about-card">
-        <h2>Helping Those In Need</h2>
-        <p>
-          We believe in giving back. That’s why a portion of the proceeds from every purchase helps support the homeless and people in need. Your support allows us to make a small but meaningful difference in the lives of others.
-        </p>
-      </section>
+        <section className="ab-section">
+          <p className="ab-kicker">Our Standard</p>
+          <h2 className="ab-section__heading">Quality without compromise.</h2>
+          <p className="ab-section__body">
+            Meaningful messaging, quality-first production, and intentional design in every release.
+          </p>
+        </section>
 
-      <section className="about-values">
-        <p className="split-kicker">What We Stand For</p>
-        <h2>More than apparel.</h2>
-        <div className="about-values__grid">
+        <section className="ab-section">
+          <p className="ab-kicker">Giving Back</p>
+          <h2 className="ab-section__heading">Helping those in need.</h2>
+          <p className="ab-section__body">
+            We believe in giving back. A portion of proceeds from every purchase supports the
+            homeless and people in need, creating meaningful change in communities we serve.
+          </p>
+        </section>
+      </div>
+
+      {/* Section 5: Core Values */}
+      <section className="ab-values">
+        <div className="ab-values__header">
+          <p className="ab-kicker">Core Beliefs</p>
+          <h2 className="ab-values__heading">What We Stand For</h2>
+        </div>
+        <div className="ab-values__grid">
           {values.map((item) => (
-            <article key={item.title} className="about-value-card">
-              <h3>{item.title}</h3>
-              <p>{item.detail}</p>
-            </article>
+            <div key={item.title} className="ab-value-card">
+              <span className="ab-value-card__icon" aria-hidden="true">
+                ✟
+              </span>
+              <h3 className="ab-value-card__title">{item.title}</h3>
+              <p className="ab-value-card__detail">{item.detail}</p>
+            </div>
           ))}
         </div>
       </section>
 
-      <section className="about-cta">
-        <h2>Ready to wear 70X7?</h2>
-        <Link className="btn btn-primary" to="/shop">
-          Shop Collection
+      {/* Section 6: CTA */}
+      <section className="ab-cta">
+        <p className="ab-kicker">Ready to shop?</p>
+        <h2 className="ab-cta__heading">Explore the Collection</h2>
+        <Link className="btn btn-primary ab-cta__btn" to="/shop">
+          Shop Now
         </Link>
       </section>
     </>

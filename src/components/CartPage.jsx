@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 
 function formatCurrency(value) {
@@ -15,6 +15,7 @@ function getLineTotal(price, quantity) {
 }
 
 function CartPage() {
+  const navigate = useNavigate()
   const {
     cartCount,
     clearCart,
@@ -29,62 +30,62 @@ function CartPage() {
 
   if (items.length === 0) {
     return (
-      <section className="cart-empty">
-        <p className="hero-kicker">Your cart</p>
-        <h1>Your cart is currently empty.</h1>
-        <p>
-          Add a few pieces from the shop to start building your next faith-wear
-          order.
-        </p>
-        <Link className="btn btn-primary" to="/shop">
-          Continue Shopping
-        </Link>
-      </section>
+      <>
+        <header className="crt-hero">
+          <div className="crt-hero__left">
+            <p className="ab-kicker">Your Cart</p>
+            <h1 className="crt-hero__title">Your cart is empty.</h1>
+          </div>
+        </header>
+        <div className="crt-empty-body">
+          <p>Add a few pieces from the shop to start building your order.</p>
+          <Link className="btn btn-primary" to="/shop">
+            Continue Shopping
+          </Link>
+        </div>
+      </>
     )
   }
 
   return (
     <>
-      <section className="cart-hero">
-        <p className="hero-kicker">Your cart</p>
-        <h1>Review your order.</h1>
-        <p>{cartCount} item(s) ready for checkout.</p>
-      </section>
+      <header className="crt-hero">
+        <div className="crt-hero__left">
+          <p className="ab-kicker">Your Cart</p>
+          <h1 className="crt-hero__title">Review your order.</h1>
+        </div>
+        <p className="crt-hero__count">
+          {cartCount} item{cartCount !== 1 ? 's' : ''}
+        </p>
+      </header>
 
-      <section className="cart-layout">
-        <div className="cart-list">
+      <div className="crt-layout">
+        <div className="crt-list">
           {items.map((item) => (
-            <article className="cart-item" key={item.id}>
-              <div className="cart-item__image" aria-hidden="true">
-                <span>{item.category}</span>
+            <article className="crt-item" key={item.id}>
+              <div className="crt-item__image" aria-hidden="true">
+                <span aria-hidden="true">✟</span>
               </div>
 
-              <div className="cart-item__content">
-                <div className="cart-item__top">
+              <div className="crt-item__body">
+                <div className="crt-item__top">
                   <div>
-                    <p className="cart-item__tag">{item.tag}</p>
-                    <h2>{item.name}</h2>
-                    <p className="cart-item__meta">
-                      {item.category} | {item.color}
-                    </p>
+                    <p className="ab-kicker">{item.category}</p>
+                    <h2 className="crt-item__name">{item.name}</h2>
                   </div>
-                  <strong className="cart-item__price">{item.price}</strong>
+                  <strong className="crt-item__price">{item.price}</strong>
                 </div>
 
-                <p className="cart-item__copy">{item.description}</p>
-
-                <div className="cart-item__footer">
-                  <div className="cart-item__quantity" aria-label={`Quantity for ${item.name}`}>
+                <div className="crt-item__footer">
+                  <div className="crt-item__qty" aria-label={`Quantity for ${item.name}`}>
                     <button
-                      className="cart-item__qty-btn"
                       onClick={() => updateQuantity(item.id, item.quantity - 1)}
                       type="button"
                     >
-                      -
+                      −
                     </button>
                     <span>{item.quantity}</span>
                     <button
-                      className="cart-item__qty-btn"
                       onClick={() => updateQuantity(item.id, item.quantity + 1)}
                       type="button"
                     >
@@ -92,10 +93,10 @@ function CartPage() {
                     </button>
                   </div>
 
-                  <p className="cart-item__line-total">{getLineTotal(item.price, item.quantity)}</p>
+                  <p className="crt-item__line">{getLineTotal(item.price, item.quantity)}</p>
 
                   <button
-                    className="cart-item__remove"
+                    className="crt-item__remove"
                     onClick={() => removeFromCart(item.id)}
                     type="button"
                   >
@@ -107,36 +108,33 @@ function CartPage() {
           ))}
         </div>
 
-        <aside className="cart-summary">
-          <p className="cart-summary__kicker">Order Summary</p>
-          <h2>Checkout Preview</h2>
-
-          <div className="cart-summary__rows">
-            <div className="cart-summary__row">
+        <aside className="crt-summary">
+          <p className="ab-kicker">Order Summary</p>
+          <div className="crt-summary__rows">
+            <div className="crt-summary__row">
               <span>Subtotal</span>
               <strong>{formatCurrency(subtotal)}</strong>
             </div>
-            <div className="cart-summary__row">
+            <div className="crt-summary__row">
               <span>Shipping</span>
-              <strong>{formatCurrency(shipping)}</strong>
+              <strong>Free</strong>
             </div>
-            <div className="cart-summary__row cart-summary__row-total">
+            <div className="crt-summary__row crt-summary__row--total">
               <span>Total</span>
               <strong>{formatCurrency(total)}</strong>
             </div>
           </div>
-
-          <button className="btn btn-primary" type="button">
+          <button className="btn btn-primary" onClick={() => navigate('/checkout')} type="button">
             Proceed to Checkout
           </button>
           <Link className="btn btn-secondary" to="/shop">
             Continue Shopping
           </Link>
-          <button className="cart-summary__clear" onClick={clearCart} type="button">
+          <button className="crt-clear" onClick={clearCart} type="button">
             Clear Cart
           </button>
         </aside>
-      </section>
+      </div>
     </>
   )
 }

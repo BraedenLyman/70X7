@@ -14,7 +14,7 @@ export const products = [
       'Relaxed fit built for layering or solo wear',
     ],
     images: [
-      { id: 'front', label: 'Front Graphic' },
+      { id: 'front', label: 'Front Graphic', src: '../assets/no-weapon.JPEG' },
       { id: 'detail', label: 'Print Detail' },
       { id: 'back', label: 'Back View' },
     ],
@@ -34,7 +34,7 @@ export const products = [
       'Designed to stand out while staying wearable',
     ],
     images: [
-      { id: 'front', label: 'Front Graphic' },
+      { id: 'front', label: 'Front Graphic', src: '../assets/moses-splitting-sea.JPEG' },
       { id: 'detail', label: 'Artwork Detail' },
       { id: 'back', label: 'Back View' },
     ],
@@ -54,7 +54,7 @@ export const products = [
       'Made to pair easily with everyday streetwear fits',
     ],
     images: [
-      { id: 'front', label: 'Front Graphic' },
+      { id: 'front', label: 'Front Graphic', src: '../assets/david-goliath.JPEG' },
       { id: 'detail', label: 'Texture Detail' },
       { id: 'back', label: 'Back View' },
     ],
