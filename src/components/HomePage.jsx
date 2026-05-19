@@ -68,11 +68,16 @@ function HomePage() {
                   className="hp-product-card__image"
                   aria-label={`${product.name} product image`}
                 >
-                  {/* Cross overlay on placeholder — replace with <img> when real images arrive */}
-                  <span className="hp-product-card__image-cross" aria-hidden="true">
-                    ✟
-                  </span>
-                  <p className="hp-product-card__image-label">{product.name}</p>
+                  {product.images[0]?.src ? (
+                    <img src={product.images[0].src} alt={product.name} />
+                  ) : (
+                    <>
+                      <span className="hp-product-card__image-cross" aria-hidden="true">
+                        ✟
+                      </span>
+                      <p className="hp-product-card__image-label">{product.name}</p>
+                    </>
+                  )}
                 </div>
                 <div className="hp-product-card__body">
                   <p className="hp-product-card__tag">{product.tag}</p>

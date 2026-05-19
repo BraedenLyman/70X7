@@ -1,3 +1,7 @@
+import noWeaponImg from '../assets/no-weapon.JPEG'
+import mosesSplittingImg from '../assets/moses-splittig-sea.JPEG'
+import davidGoliathImg from '../assets/david-goliath.JPEG'
+
 export const products = [
   {
     id: 'tee-nwfam',
@@ -14,7 +18,7 @@ export const products = [
       'Relaxed fit built for layering or solo wear',
     ],
     images: [
-      { id: 'front', label: 'Front Graphic', src: '../assets/no-weapon.JPEG' },
+      { id: 'front', label: 'Front Graphic', src: noWeaponImg },
       { id: 'detail', label: 'Print Detail' },
       { id: 'back', label: 'Back View' },
     ],
@@ -34,7 +38,7 @@ export const products = [
       'Designed to stand out while staying wearable',
     ],
     images: [
-      { id: 'front', label: 'Front Graphic', src: '../assets/moses-splitting-sea.JPEG' },
+      { id: 'front', label: 'Front Graphic', src: mosesSplittingImg },
       { id: 'detail', label: 'Artwork Detail' },
       { id: 'back', label: 'Back View' },
     ],
@@ -54,7 +58,7 @@ export const products = [
       'Made to pair easily with everyday streetwear fits',
     ],
     images: [
-      { id: 'front', label: 'Front Graphic', src: '../assets/david-goliath.JPEG' },
+      { id: 'front', label: 'Front Graphic', src: davidGoliathImg },
       { id: 'detail', label: 'Texture Detail' },
       { id: 'back', label: 'Back View' },
     ],

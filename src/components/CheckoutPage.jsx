@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { loadStripe } from '@stripe/stripe-js'
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { useCart } from '../context/CartContext'
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
@@ -72,13 +72,13 @@ function CheckoutPage() {
       </header>
 
       <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'night', variables: { colorPrimary: '#b89449', colorBackground: '#0d0d0d', colorText: '#f0f0f0', colorDanger: '#e05252', fontFamily: 'system-ui, -apple-system, sans-serif', borderRadius: '8px' } } }}>
-        <CheckoutForm items={items} subtotal={subtotal} />
+        <CheckoutForm items={items} subtotal={subtotal} clientSecret={clientSecret} />
       </Elements>
     </>
   )
 }
 
-function CheckoutForm({ items, subtotal }) {
+function CheckoutForm({ items, subtotal, clientSecret }) {
   const stripe = useStripe()
   const elements = useElements()
   const [loading, setLoading] = useState(false)
@@ -89,7 +89,6 @@ function CheckoutForm({ items, subtotal }) {
     address: '',
     city: '',
     province: '',
-    postal: '',
     country: 'Canada',
   })
 
@@ -103,19 +102,23 @@ function CheckoutForm({ items, subtotal }) {
     setLoading(true)
     setErrorMessage(null)
 
-    const { error } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/checkout/success`,
-        shipping: {
+    const cardElement = elements.getElement(CardElement)
+
+    const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
+      payment_method: {
+        card: cardElement,
+        billing_details: {
           name: shippingData.name,
-          address: {
-            line1: shippingData.address,
-            city: shippingData.city,
-            state: shippingData.province,
-            postal_code: shippingData.postal,
-            country: shippingData.country === 'Canada' ? 'CA' : 'US',
-          },
+          email: shippingData.email,
+        },
+      },
+      shipping: {
+        name: shippingData.name,
+        address: {
+          line1: shippingData.address,
+          city: shippingData.city,
+          state: shippingData.province,
+          country: shippingData.country === 'Canada' ? 'CA' : 'US',
         },
       },
     })
@@ -123,6 +126,8 @@ function CheckoutForm({ items, subtotal }) {
     if (error) {
       setErrorMessage(error.message)
       setLoading(false)
+    } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+      window.location.href = `${window.location.origin}/checkout/success`
     }
   }
 
@@ -197,18 +202,6 @@ function CheckoutForm({ items, subtotal }) {
               />
             </div>
 
-            <div className="chk-field">
-              <label htmlFor="postal">Postal Code</label>
-              <input
-                id="postal"
-                name="postal"
-                type="text"
-                required
-                value={shippingData.postal}
-                onChange={handleShippingChange}
-              />
-            </div>
-
             <div className="chk-field chk-field--full">
               <label htmlFor="country">Country</label>
               <select
@@ -226,7 +219,9 @@ function CheckoutForm({ items, subtotal }) {
 
         <div className="chk-section">
           <h2 className="chk-section__title">Payment Method</h2>
-          <PaymentElement />
+          <div className="chk-card-input">
+            <CardElement options={{ hidePostalCode: true, style: { base: { color: '#f0f0f0', fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '16px', '::placeholder': { color: '#999999' } }, invalid: { color: '#e05252' } } }} />
+          </div>
 
           <div className="chk-summary">
             <h3 className="chk-summary__title">Order Summary</h3>

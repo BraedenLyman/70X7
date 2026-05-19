@@ -63,8 +63,12 @@ function CartPage() {
         <div className="crt-list">
           {items.map((item) => (
             <article className="crt-item" key={item.id}>
-              <div className="crt-item__image" aria-hidden="true">
-                <span aria-hidden="true">✟</span>
+              <div className="crt-item__image" aria-label={`${item.name} product image`}>
+                {item.images && item.images[0]?.src ? (
+                  <img src={item.images[0].src} alt={item.name} />
+                ) : (
+                  <span aria-hidden="true">✟</span>
+                )}
               </div>
 
               <div className="crt-item__body">

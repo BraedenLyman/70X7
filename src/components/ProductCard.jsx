@@ -7,9 +7,13 @@ function ProductCard({ product }) {
   return (
     <article className="product-card" aria-label={product.name}>
       <div className="product-card__image">
-        <span className="product-card__image-cross" aria-hidden="true">
-          ✟
-        </span>
+        {product.images[0]?.src ? (
+          <img src={product.images[0].src} alt={product.name} />
+        ) : (
+          <span className="product-card__image-cross" aria-hidden="true">
+            ✟
+          </span>
+        )}
         <span className="product-card__cat-badge">{product.category}</span>
       </div>
 
