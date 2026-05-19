@@ -1258,7 +1258,8 @@
 }
 
 .chk-field input,
-.chk-field select {
+.chk-field select,
+.chk-field textarea {
   border: 1px solid var(--color-border);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.04);
@@ -1269,15 +1270,22 @@
 }
 
 .chk-field input::placeholder,
-.chk-field select {
+.chk-field select,
+.chk-field textarea::placeholder {
   color: var(--color-text-muted);
 }
 
 .chk-field input:focus,
-.chk-field select:focus {
+.chk-field select:focus,
+.chk-field textarea:focus {
   outline: none;
   border-color: var(--color-brand-strong);
   background: rgba(255, 255, 255, 0.06);
+}
+
+.chk-field textarea {
+  resize: vertical;
+  min-height: 100px;
 }
 
 .chk-summary {

@@ -10,6 +10,8 @@ export const products = [
     //color: 'Black',
     price: '$40',
     tag: 'Popular',
+    weight: 0.25, // kg
+    dimensions: { length: 30, width: 25, height: 5 }, // cm
     description:
       'A bold statement tee designed to reflect faith, resilience, and confidence in every setting.',
     details: [
@@ -30,6 +32,8 @@ export const products = [
     //color: 'Sand',
     price: '$40',
     tag: 'Popular',
+    weight: 0.25, // kg
+    dimensions: { length: 30, width: 25, height: 5 }, // cm
     description:
       'A scripture-led design inspired by one of the most iconic moments of faith and obedience.',
     details: [
@@ -50,6 +54,8 @@ export const products = [
     //color: 'Black',
     price: '$40',
     tag: 'Popular',
+    weight: 0.25, // kg
+    dimensions: { length: 30, width: 25, height: 5 }, // cm
     description:
       'A heavyweight faith-forward tee inspired by courage, conviction, and trusting God against the odds.',
     details: [

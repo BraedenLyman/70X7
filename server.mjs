@@ -129,7 +129,8 @@ const server = http.createServer(async (req, res) => {
                   weight: weight.toString(),
                   mass_unit: 'kg',
                 }
-              ]
+              ],
+              carrier_accounts: ['9aec8aca3a2548809c15bfcd9923f805']
             })
           })
 

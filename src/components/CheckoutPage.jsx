@@ -95,10 +95,13 @@ function CheckoutForm({ items, subtotal, clientSecret, navigate }) {
     province: '',
     postal_code: '',
     country: 'Canada',
+    apartment: '',
+    deliveryInstructions: '',
   })
   const [shippingRates, setShippingRates] = useState([])
   const [selectedShipping, setSelectedShipping] = useState(null)
   const [shippingLoading, setShippingLoading] = useState(false)
+  const [hasAttemptedShipping, setHasAttemptedShipping] = useState(false)
   const addressInputRef = useRef(null)
   const [autocomplete, setAutocomplete] = useState(null)
   const debounceTimerRef = useRef(null)
@@ -225,6 +228,7 @@ function CheckoutForm({ items, subtotal, clientSecret, navigate }) {
     setShippingLoading(true)
     setShippingRates([])
     setSelectedShipping(null)
+    setHasAttemptedShipping(true)
 
     try {
       // Validate required fields
@@ -232,6 +236,36 @@ function CheckoutForm({ items, subtotal, clientSecret, navigate }) {
         setShippingLoading(false)
         return
       }
+
+      const totalWeight = items.reduce((sum, item) => sum + (item.weight || 0.25) * item.quantity, 0)
+
+      // Log individual items and totals
+      console.log('📦 Cart Items - Weight & Dimensions:')
+      let totalLength = 0
+      let totalWidth = 0
+      let totalHeight = 0
+
+      items.forEach((item) => {
+        const itemWeight = (item.weight || 0.25) * item.quantity
+        const dims = item.dimensions || { length: 30, width: 25, height: 5 }
+        const totalItemHeight = dims.height * item.quantity
+
+        totalLength = Math.max(totalLength, dims.length)
+        totalWidth = Math.max(totalWidth, dims.width)
+        totalHeight += totalItemHeight
+
+        console.log(
+          `  ${item.name} (qty: ${item.quantity}):`,
+          `Weight: ${itemWeight.toFixed(2)}kg`,
+          `Dimensions: ${dims.length}×${dims.width}×${totalItemHeight}cm`
+        )
+      })
+
+      console.log(
+        '📊 Order Totals:',
+        `Total Weight: ${totalWeight.toFixed(2)}kg`,
+        `Total Dimensions: ${totalLength}×${totalWidth}×${totalHeight}cm`
+      )
 
       const response = await fetch('http://localhost:8787/api/calculate-shipping', {
         method: 'POST',
@@ -245,7 +279,7 @@ function CheckoutForm({ items, subtotal, clientSecret, navigate }) {
             name: shippingData.name,
             country: shippingData.country,
           },
-          weight: 0.25, // 250g per t-shirt
+          weight: totalWeight,
         }),
       })
 
@@ -273,6 +307,16 @@ function CheckoutForm({ items, subtotal, clientSecret, navigate }) {
   const handleShippingChange = (e) => {
     const { name, value } = e.target
     setShippingData((prev) => ({ ...prev, [name]: value }))
+
+    // Debounce address field to wait for user to finish typing
+    if (name === 'address') {
+      clearTimeout(debounceTimerRef.current)
+      debounceTimerRef.current = setTimeout(() => {
+        if (value && shippingData.city && shippingData.province && shippingData.postal_code) {
+          calculateShipping({ address: value, city: shippingData.city, province: shippingData.province, postal_code: shippingData.postal_code })
+        }
+      }, 800)
+    }
   }
 
   return (
@@ -364,6 +408,30 @@ function CheckoutForm({ items, subtotal, clientSecret, navigate }) {
                 disabled
               />
             </div>
+
+            <div className="chk-field chk-field--full">
+              <label htmlFor="apartment">Apartment, Suite, or Building Number (Optional)</label>
+              <input
+                id="apartment"
+                name="apartment"
+                type="text"
+                value={shippingData.apartment}
+                onChange={handleShippingChange}
+                placeholder="e.g., Apt 201, Suite 100, Building A"
+              />
+            </div>
+
+            <div className="chk-field chk-field--full">
+              <label htmlFor="deliveryInstructions">Delivery Instructions (Optional)</label>
+              <textarea
+                id="deliveryInstructions"
+                name="deliveryInstructions"
+                value={shippingData.deliveryInstructions}
+                onChange={handleShippingChange}
+                placeholder="e.g., Leave at front door, Ring doorbell twice, Gate code: 1234"
+                rows="3"
+              />
+            </div>
           </div>
         </div>
 
@@ -375,7 +443,7 @@ function CheckoutForm({ items, subtotal, clientSecret, navigate }) {
 
           {shippingLoading && <p className="chk-shipping__loading">Calculating shipping rates...</p>}
 
-          {!shippingLoading && shippingData.address && shippingRates.length === 0 && (
+          {!shippingLoading && hasAttemptedShipping && shippingData.address && shippingRates.length === 0 && (
             <p className="chk-shipping__no-rates">No shipping rates available at this time. Please check your address and try again.</p>
           )}
 
