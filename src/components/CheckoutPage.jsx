@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { useCart } from '../context/CartContext'
+
+const GOOGLE_PLACES_API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
 
@@ -91,6 +93,11 @@ function CheckoutForm({ items, subtotal, clientSecret }) {
     province: '',
     country: 'Canada',
   })
+  const [shippingRates, setShippingRates] = useState([])
+  const [selectedShipping, setSelectedShipping] = useState(null)
+  const [shippingLoading, setShippingLoading] = useState(false)
+  const addressInputRef = useRef(null)
+  const [autocomplete, setAutocomplete] = useState(null)
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -99,35 +106,159 @@ function CheckoutForm({ items, subtotal, clientSecret }) {
       return
     }
 
+    if (!selectedShipping) {
+      setErrorMessage('Please select a shipping method')
+      return
+    }
+
     setLoading(true)
     setErrorMessage(null)
 
-    const cardElement = elements.getElement(CardElement)
+    try {
+      // Create a new payment intent with shipping included
+      const totalAmount = Math.round(subtotal * 100) + Math.round(selectedShipping.amount * 100)
 
-    const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
-      payment_method: {
-        card: cardElement,
-        billing_details: {
+      const intentResponse = await fetch('/api/create-payment-intent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items,
+          shippingAmount: Math.round(selectedShipping.amount * 100),
+        }),
+      })
+
+      const intentData = await intentResponse.json()
+      if (intentData.error) {
+        throw new Error(intentData.error)
+      }
+
+      const cardElement = elements.getElement(CardElement)
+
+      const { error, paymentIntent } = await stripe.confirmCardPayment(intentData.clientSecret, {
+        payment_method: {
+          card: cardElement,
+          billing_details: {
+            name: shippingData.name,
+            email: shippingData.email,
+          },
+        },
+        shipping: {
           name: shippingData.name,
-          email: shippingData.email,
+          address: {
+            line1: shippingData.address,
+            city: shippingData.city,
+            state: shippingData.province,
+            country: shippingData.country === 'Canada' ? 'CA' : 'US',
+          },
         },
-      },
-      shipping: {
-        name: shippingData.name,
-        address: {
-          line1: shippingData.address,
-          city: shippingData.city,
-          state: shippingData.province,
-          country: shippingData.country === 'Canada' ? 'CA' : 'US',
-        },
-      },
+      })
+
+      if (error) {
+        setErrorMessage(error.message)
+        setLoading(false)
+      } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+        window.location.href = `${window.location.origin}/checkout/success`
+      }
+    } catch (err) {
+      setErrorMessage(err.message)
+      setLoading(false)
+    }
+  }
+
+  // Initialize Google Places autocomplete
+  useEffect(() => {
+    if (!addressInputRef.current || !window.google) return
+
+    const autocompleteInstance = new window.google.maps.places.Autocomplete(addressInputRef.current, {
+      componentRestrictions: { country: ['ca', 'us'] },
+      types: ['address'],
     })
 
-    if (error) {
-      setErrorMessage(error.message)
-      setLoading(false)
-    } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-      window.location.href = `${window.location.origin}/checkout/success`
+    autocompleteInstance.addListener('place_changed', () => {
+      const place = autocompleteInstance.getPlace()
+      if (!place.geometry) return
+
+      const addressComponents = place.address_components
+      let address = ''
+      let city = ''
+      let province = ''
+      let postalCode = ''
+
+      addressComponents.forEach(component => {
+        if (component.types.includes('street_number')) {
+          address = component.long_name + ' ' + address
+        }
+        if (component.types.includes('route')) {
+          address += component.long_name
+        }
+        if (component.types.includes('locality')) {
+          city = component.long_name
+        }
+        if (component.types.includes('administrative_area_level_1')) {
+          province = component.short_name
+        }
+        if (component.types.includes('postal_code')) {
+          postalCode = component.long_name
+        }
+      })
+
+      setShippingData((prev) => ({
+        ...prev,
+        address: address.trim(),
+        city,
+        province,
+        postal_code: postalCode,
+      }))
+
+      // Calculate shipping after address is set
+      setTimeout(() => calculateShipping({ address: address.trim(), city, province, postal_code: postalCode }), 0)
+    })
+
+    setAutocomplete(autocompleteInstance)
+  }, [])
+
+  const calculateShipping = async (addressData) => {
+    setShippingLoading(true)
+    setShippingRates([])
+    setSelectedShipping(null)
+
+    try {
+      const response = await fetch('/api/calculate-shipping', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address: {
+            street1: addressData.address,
+            city: addressData.city,
+            province: addressData.province,
+            postal_code: addressData.postal_code,
+            name: shippingData.name,
+            country: shippingData.country,
+          },
+          weight: 0.25, // 250g per t-shirt
+        }),
+      })
+
+      const raw = await response.text()
+      let data = null
+      try {
+        data = raw ? JSON.parse(raw) : {}
+      } catch {
+        throw new Error(`Shipping API returned non-JSON (${response.status}): ${raw || 'empty response'}`)
+      }
+
+      if (!response.ok) {
+        throw new Error(data?.error || `Shipping API error (${response.status})`)
+      }
+
+      if (data.rates) {
+        setShippingRates(data.rates)
+      }
+    } catch (err) {
+      console.error('Shipping calculation error:', err)
+      setErrorMessage('Could not calculate shipping. Please try again.')
+    } finally {
+      setShippingLoading(false)
     }
   }
 
@@ -170,11 +301,13 @@ function CheckoutForm({ items, subtotal, clientSecret }) {
               <label htmlFor="address">Address</label>
               <input
                 id="address"
+                ref={addressInputRef}
                 name="address"
                 type="text"
                 required
                 value={shippingData.address}
                 onChange={handleShippingChange}
+                placeholder="Start typing your address..."
               />
             </div>
 
@@ -223,6 +356,30 @@ function CheckoutForm({ items, subtotal, clientSecret }) {
             <CardElement options={{ hidePostalCode: true, style: { base: { color: '#f0f0f0', fontFamily: 'system-ui, -apple-system, sans-serif', fontSize: '16px', '::placeholder': { color: '#999999' } }, invalid: { color: '#e05252' } } }} />
           </div>
 
+          {shippingLoading && <p className="chk-shipping__loading">Calculating shipping rates...</p>}
+
+          {shippingRates.length > 0 && (
+            <div className="chk-shipping">
+              <h3 className="chk-shipping__title">Shipping Method</h3>
+              {shippingRates.map((rate) => (
+                <label key={rate.id} className="chk-shipping__option">
+                  <input
+                    type="radio"
+                    name="shipping"
+                    value={rate.id}
+                    checked={selectedShipping?.id === rate.id}
+                    onChange={() => setSelectedShipping(rate)}
+                  />
+                  <span className="chk-shipping__label">
+                    {rate.provider} - {rate.servicelevel}
+                    <span className="chk-shipping__price">${rate.amount.toFixed(2)}</span>
+                    {rate.estimated_days && <span className="chk-shipping__days">{rate.estimated_days} days</span>}
+                  </span>
+                </label>
+              ))}
+            </div>
+          )}
+
           <div className="chk-summary">
             <h3 className="chk-summary__title">Order Summary</h3>
             <div className="chk-summary__items">
@@ -240,9 +397,15 @@ function CheckoutForm({ items, subtotal, clientSecret }) {
                 </div>
               ))}
             </div>
+            {selectedShipping && (
+              <div className="chk-summary__row">
+                <span>Shipping ({selectedShipping.servicelevel})</span>
+                <strong>${selectedShipping.amount.toFixed(2)}</strong>
+              </div>
+            )}
             <div className="chk-summary__total">
               <span>Total</span>
-              <strong>${Math.round(subtotal)}</strong>
+              <strong>${(Math.round(subtotal) + (selectedShipping?.amount || 0)).toFixed(2)}</strong>
             </div>
           </div>
 

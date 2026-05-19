@@ -13,6 +13,7 @@ const basePort = Number(process.env.PORT || 8787)
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY
 
 const stripe = stripeSecretKey ? new Stripe(stripeSecretKey) : null
+const shippoApiKey = process.env.SHIPPO_API_KEY
 
 const contentTypes = {
   '.css': 'text/css; charset=utf-8',
@@ -50,18 +51,126 @@ async function sendIndex(res) {
 const server = http.createServer(async (req, res) => {
   try {
     const method = req.method || 'GET'
+    const requestUrl = new URL(req.url || '/', 'http://localhost')
+    const pathname = requestUrl.pathname.replace(/\/+$/, '') || '/'
 
-    if (method === 'OPTIONS' && req.url === '/api/create-payment-intent') {
+    console.log(`[${method}] ${pathname}`)
+
+    // Handle CORS preflight for all API routes
+    if (method === 'OPTIONS' && pathname.startsWith('/api')) {
+      console.log('Handling OPTIONS preflight')
       res.writeHead(204, {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST',
+        'Access-Control-Allow-Origin': 'http://localhost:5173',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
       })
       res.end()
       return
     }
 
-    if (method === 'POST' && req.url === '/api/create-payment-intent') {
+    if (method === 'POST' && pathname === '/api/calculate-shipping') {
+      if (!shippoApiKey) {
+        res.writeHead(503, {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': 'http://localhost:5173',
+        })
+        res.end(
+          JSON.stringify({
+            error: 'Shippo is not configured. Set SHIPPO_API_KEY in your environment.',
+          }),
+        )
+        return
+      }
+
+      let body = ''
+      req.on('data', (chunk) => {
+        body += chunk
+      })
+      req.on('end', async () => {
+        try {
+          const { address, weight = 0.25 } = JSON.parse(body)
+
+          // Create address object for Shippo
+          const toAddress = {
+            name: address.name || 'Customer',
+            street1: address.street1 || '',
+            city: address.city || '',
+            state: address.province || '',
+            zip: address.postal_code || '',
+            country: address.country === 'Canada' ? 'CA' : 'US',
+          }
+
+          // Default from address (Ontario)
+          const fromAddress = {
+            name: '70X7',
+            street1: '123 Main St',
+            city: 'Toronto',
+            state: 'ON',
+            zip: 'M5V 3A8',
+            country: 'CA',
+          }
+
+          // Create parcel (t-shirt estimate)
+          const parcelResponse = await fetch('https://api.goshippo.com/shipments/', {
+            method: 'POST',
+            headers: {
+              'Authorization': `ShippoToken ${shippoApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              address_from: fromAddress,
+              address_to: toAddress,
+              parcels: [
+                {
+                  length: '30',
+                  width: '20',
+                  height: '5',
+                  distance_unit: 'cm',
+                  weight: weight.toString(),
+                  mass_unit: 'kg',
+                }
+              ]
+            })
+          })
+
+          const shipmentData = await parcelResponse.json()
+
+          if (!shipmentData.rates || shipmentData.rates.length === 0) {
+            res.writeHead(200, {
+              'Content-Type': 'application/json',
+              'Access-Control-Allow-Origin': '*',
+            })
+            res.end(JSON.stringify({ rates: [] }))
+            return
+          }
+
+          // Format rates for frontend
+          const rates = shipmentData.rates.map(rate => ({
+            id: rate.object_id,
+            provider: rate.provider,
+            servicelevel: rate.servicelevel.name,
+            amount: parseFloat(rate.amount),
+            currency: rate.currency,
+            estimated_days: rate.estimated_days,
+          }))
+
+          res.writeHead(200, {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          })
+          res.end(JSON.stringify({ rates }))
+        } catch (err) {
+          res.writeHead(500, {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          })
+          res.end(JSON.stringify({ error: err.message }))
+        }
+      })
+      return
+    }
+
+    if (method === 'POST' && pathname === '/api/create-payment-intent') {
       if (!stripe) {
         res.writeHead(503, {
           'Content-Type': 'application/json',
@@ -81,7 +190,7 @@ const server = http.createServer(async (req, res) => {
       })
       req.on('end', async () => {
         try {
-          const { items } = JSON.parse(body)
+          const { items, shippingAmount = 0 } = JSON.parse(body)
           if (!Array.isArray(items) || items.length === 0) {
             res.writeHead(400, {
               'Content-Type': 'application/json',
@@ -91,13 +200,15 @@ const server = http.createServer(async (req, res) => {
             return
           }
 
-          const amount = items.reduce((sum, item) => {
+          const itemsAmount = items.reduce((sum, item) => {
             const price = Number(item.price.replace(/[^0-9.]/g, ''))
             return sum + price * item.quantity * 100
           }, 0)
 
+          const totalAmount = Math.round(itemsAmount + shippingAmount)
+
           const paymentIntent = await stripe.paymentIntents.create({
-            amount: Math.round(amount),
+            amount: totalAmount,
             currency: 'cad',
             automatic_payment_methods: { enabled: true },
           })
