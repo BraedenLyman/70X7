@@ -9,7 +9,7 @@ function CheckoutSuccessPage() {
 
   useEffect(() => {
     clearCart()
-  }, [clearCart])
+  }, [])
 
   return (
     <>

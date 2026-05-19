@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState } from 'react'
+import { createContext, useContext, useMemo, useState, useEffect, useRef, useCallback } from 'react'
 
 const CartContext = createContext(null)
 
@@ -7,9 +7,18 @@ function parsePrice(price) {
 }
 
 export function CartProvider({ children }) {
-  const [items, setItems] = useState([])
+  const [items, setItems] = useState(() => {
+    const saved = localStorage.getItem('70x7-cart')
+    return saved ? JSON.parse(saved) : []
+  })
+  const [lastAdded, setLastAdded] = useState(null)
+  const toastTimerRef = useRef(null)
 
-  function addToCart(product) {
+  useEffect(() => {
+    localStorage.setItem('70x7-cart', JSON.stringify(items))
+  }, [items])
+
+  const addToCart = useCallback((product) => {
     setItems((current) => {
       const existingItem = current.find((item) => item.id === product.id)
 
@@ -23,9 +32,12 @@ export function CartProvider({ children }) {
 
       return [...current, { ...product, quantity: 1 }]
     })
-  }
+    setLastAdded(product.name)
+    clearTimeout(toastTimerRef.current)
+    toastTimerRef.current = setTimeout(() => setLastAdded(null), 2500)
+  }, [])
 
-  function updateQuantity(productId, nextQuantity) {
+  const updateQuantity = useCallback((productId, nextQuantity) => {
     if (nextQuantity <= 0) {
       setItems((current) => current.filter((item) => item.id !== productId))
       return
@@ -36,15 +48,15 @@ export function CartProvider({ children }) {
         item.id === productId ? { ...item, quantity: nextQuantity } : item
       )
     )
-  }
+  }, [])
 
-  function removeFromCart(productId) {
+  const removeFromCart = useCallback((productId) => {
     setItems((current) => current.filter((item) => item.id !== productId))
-  }
+  }, [])
 
-  function clearCart() {
+  const clearCart = useCallback(() => {
     setItems([])
-  }
+  }, [])
 
   const value = useMemo(
     () => ({
@@ -52,6 +64,7 @@ export function CartProvider({ children }) {
       cartCount: items.reduce((total, item) => total + item.quantity, 0),
       clearCart,
       items,
+      lastAdded,
       removeFromCart,
       subtotal: items.reduce(
         (total, item) => total + parsePrice(item.price) * item.quantity,
@@ -59,7 +72,7 @@ export function CartProvider({ children }) {
       ),
       updateQuantity,
     }),
-    [items]
+    [items, lastAdded]
   )
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>

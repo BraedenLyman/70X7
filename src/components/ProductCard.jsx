@@ -1,8 +1,20 @@
+import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 
 function ProductCard({ product }) {
   const { addToCart } = useCart()
+  const buttonRef = useRef(null)
+
+  const handleAddToCart = () => {
+    addToCart(product)
+    if (buttonRef.current) {
+      buttonRef.current.classList.remove('pulse')
+      void buttonRef.current.offsetWidth
+      buttonRef.current.classList.add('pulse')
+      setTimeout(() => buttonRef.current?.classList.remove('pulse'), 600)
+    }
+  }
 
   return (
     <article className="product-card" aria-label={product.name}>
@@ -29,8 +41,9 @@ function ProductCard({ product }) {
 
         <div className="product-card__actions">
           <button
-            className="btn btn-secondary"
-            onClick={() => addToCart(product)}
+            ref={buttonRef}
+            className="btn btn-secondary btn-add-to-cart"
+            onClick={handleAddToCart}
             type="button"
           >
             Add to Cart

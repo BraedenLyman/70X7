@@ -116,15 +116,11 @@ function CartPage() {
           <p className="ab-kicker">Order Summary</p>
           <div className="crt-summary__rows">
             <div className="crt-summary__row">
-              <span>Subtotal</span>
-              <strong>{formatCurrency(subtotal)}</strong>
-            </div>
-            <div className="crt-summary__row">
               <span>Shipping</span>
-              <strong>Free</strong>
+              <strong className="crt-summary__shipping-note">Calculated on next page</strong>
             </div>
             <div className="crt-summary__row crt-summary__row--total">
-              <span>Total</span>
+              <span>Subtotal</span>
               <strong>{formatCurrency(total)}</strong>
             </div>
           </div>

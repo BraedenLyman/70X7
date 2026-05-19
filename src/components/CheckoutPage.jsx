@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { useCart } from '../context/CartContext'
@@ -8,6 +9,7 @@ const GOOGLE_PLACES_API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
 
 function CheckoutPage() {
+  const navigate = useNavigate()
   const { items, subtotal } = useCart()
   const [clientSecret, setClientSecret] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -74,13 +76,13 @@ function CheckoutPage() {
       </header>
 
       <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: 'night', variables: { colorPrimary: '#b89449', colorBackground: '#0d0d0d', colorText: '#f0f0f0', colorDanger: '#e05252', fontFamily: 'system-ui, -apple-system, sans-serif', borderRadius: '8px' } } }}>
-        <CheckoutForm items={items} subtotal={subtotal} clientSecret={clientSecret} />
+        <CheckoutForm items={items} subtotal={subtotal} clientSecret={clientSecret} navigate={navigate} />
       </Elements>
     </>
   )
 }
 
-function CheckoutForm({ items, subtotal, clientSecret }) {
+function CheckoutForm({ items, subtotal, clientSecret, navigate }) {
   const stripe = useStripe()
   const elements = useElements()
   const [loading, setLoading] = useState(false)
@@ -91,6 +93,7 @@ function CheckoutForm({ items, subtotal, clientSecret }) {
     address: '',
     city: '',
     province: '',
+    postal_code: '',
     country: 'Canada',
   })
   const [shippingRates, setShippingRates] = useState([])
@@ -157,7 +160,7 @@ function CheckoutForm({ items, subtotal, clientSecret }) {
         setErrorMessage(error.message)
         setLoading(false)
       } else if (paymentIntent && paymentIntent.status === 'succeeded') {
-        window.location.href = `${window.location.origin}/checkout/success`
+        navigate('/checkout/success', { replace: true })
       }
     } catch (err) {
       setErrorMessage(err.message)
@@ -223,7 +226,13 @@ function CheckoutForm({ items, subtotal, clientSecret }) {
     setSelectedShipping(null)
 
     try {
-      const response = await fetch('/api/calculate-shipping', {
+      // Validate required fields
+      if (!addressData.address || !addressData.city || !addressData.province || !addressData.postal_code) {
+        setShippingLoading(false)
+        return
+      }
+
+      const response = await fetch('http://localhost:8787/api/calculate-shipping', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -239,24 +248,22 @@ function CheckoutForm({ items, subtotal, clientSecret }) {
         }),
       })
 
-      const raw = await response.text()
-      let data = null
-      try {
-        data = raw ? JSON.parse(raw) : {}
-      } catch {
-        throw new Error(`Shipping API returned non-JSON (${response.status}): ${raw || 'empty response'}`)
-      }
-
       if (!response.ok) {
-        throw new Error(data?.error || `Shipping API error (${response.status})`)
+        throw new Error(`Server error: ${response.status}`)
       }
 
-      if (data.rates) {
+      const data = await response.json()
+      if (data.error) {
+        console.error('Shipping error:', data.error)
+        setShippingRates([])
+      } else if (data.rates && Array.isArray(data.rates)) {
         setShippingRates(data.rates)
+      } else {
+        setShippingRates([])
       }
     } catch (err) {
       console.error('Shipping calculation error:', err)
-      setErrorMessage('Could not calculate shipping. Please try again.')
+      setShippingRates([])
     } finally {
       setShippingLoading(false)
     }
@@ -335,17 +342,26 @@ function CheckoutForm({ items, subtotal, clientSecret }) {
               />
             </div>
 
-            <div className="chk-field chk-field--full">
-              <label htmlFor="country">Country</label>
-              <select
-                id="country"
-                name="country"
-                value={shippingData.country}
+            <div className="chk-field">
+              <label htmlFor="postal">Postal Code</label>
+              <input
+                id="postal"
+                name="postal_code"
+                type="text"
+                required
+                value={shippingData.postal_code}
                 onChange={handleShippingChange}
-              >
-                <option>Canada</option>
-                <option>United States</option>
-              </select>
+              />
+            </div>
+
+            <div className="chk-field">
+              <label htmlFor="country">Country</label>
+              <input
+                id="country"
+                type="text"
+                value="Canada"
+                disabled
+              />
             </div>
           </div>
         </div>
@@ -357,6 +373,10 @@ function CheckoutForm({ items, subtotal, clientSecret }) {
           </div>
 
           {shippingLoading && <p className="chk-shipping__loading">Calculating shipping rates...</p>}
+
+          {!shippingLoading && shippingData.address && shippingRates.length === 0 && (
+            <p className="chk-shipping__no-rates">No shipping rates available at this time. Please check your address and try again.</p>
+          )}
 
           {shippingRates.length > 0 && (
             <div className="chk-shipping">
@@ -397,12 +417,10 @@ function CheckoutForm({ items, subtotal, clientSecret }) {
                 </div>
               ))}
             </div>
-            {selectedShipping && (
-              <div className="chk-summary__row">
-                <span>Shipping ({selectedShipping.servicelevel})</span>
-                <strong>${selectedShipping.amount.toFixed(2)}</strong>
-              </div>
-            )}
+            <div className="chk-summary__row">
+              <span>Shipping {selectedShipping && `(${selectedShipping.servicelevel})`}</span>
+              <strong>{selectedShipping ? `$${selectedShipping.amount.toFixed(2)}` : 'waiting to be calculated'}</strong>
+            </div>
             <div className="chk-summary__total">
               <span>Total</span>
               <strong>${(Math.round(subtotal) + (selectedShipping?.amount || 0)).toFixed(2)}</strong>
@@ -414,7 +432,8 @@ function CheckoutForm({ items, subtotal, clientSecret }) {
           <button
             type="submit"
             className="btn btn-primary chk-submit"
-            disabled={!stripe || loading}
+            disabled={!stripe || loading || !selectedShipping || shippingLoading}
+            title={!selectedShipping ? 'Please select a shipping method' : shippingLoading ? 'Calculating shipping...' : ''}
           >
             {loading ? 'Processing...' : 'Place Order'}
           </button>

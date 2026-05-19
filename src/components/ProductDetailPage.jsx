@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { getProductById } from '../data/products'
 import { useCart } from '../context/CartContext'
@@ -9,6 +9,7 @@ function ProductDetailPage() {
   const [activeImageIndex, setActiveImageIndex] = useState(0)
   const [isCarouselPaused, setIsCarouselPaused] = useState(false)
   const { addToCart } = useCart()
+  const buttonRef = useRef(null)
 
   if (!product) {
     return <Navigate replace to="/shop" />
@@ -17,6 +18,16 @@ function ProductDetailPage() {
   useEffect(() => {
     setActiveImageIndex(0)
   }, [productId])
+
+  const handleAddToCart = () => {
+    addToCart(product)
+    if (buttonRef.current) {
+      buttonRef.current.classList.remove('pulse')
+      void buttonRef.current.offsetWidth
+      buttonRef.current.classList.add('pulse')
+      setTimeout(() => buttonRef.current?.classList.remove('pulse'), 600)
+    }
+  }
 
   useEffect(() => {
     if (isCarouselPaused || product.images.length <= 1) {
@@ -105,8 +116,9 @@ function ProductDetailPage() {
 
         <div className="pdp-actions">
           <button
-            className="btn btn-primary"
-            onClick={() => addToCart(product)}
+            ref={buttonRef}
+            className="btn btn-primary btn-add-to-cart"
+            onClick={handleAddToCart}
             type="button"
           >
             Add to Cart

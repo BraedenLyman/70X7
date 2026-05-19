@@ -13,6 +13,8 @@ import CartPage from './components/CartPage'
 import ScrollToTop from './components/ScrollToTop'
 import CheckoutPage from './components/CheckoutPage'
 import CheckoutSuccessPage from './components/CheckoutSuccessPage'
+import PageTransition from './components/PageTransition'
+import CartToast from './components/CartToast'
 
 function App() {
   const location = useLocation()
@@ -20,32 +22,35 @@ function App() {
   const isContact = location.pathname.startsWith('/contact')
   const isCheckout = location.pathname.startsWith('/checkout')
 
+  const routeKey = useLocation().key
+
   return (
     <CartProvider>
       <div className="site-shell">
         <ScrollToTop />
         <Header />
+        <CartToast />
         <main className={isHome ? 'home-main' : isContact || isCheckout ? 'brand-page brand-page--contact' : 'brand-page'}>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
+          <Routes key={routeKey}>
+            <Route path="/" element={<PageTransition><HomePage /></PageTransition>} />
             <Route path="/home" element={<Navigate replace to="/" />} />
-            <Route path="/shop" element={<ShopPage />} />
-            <Route path="/shop/:productId" element={<ProductDetailPage />} />
-            <Route path="/cart" element={<CartPage />} />
-            <Route path="/checkout" element={<CheckoutPage />} />
-            <Route path="/checkout/success" element={<CheckoutSuccessPage />} />
+            <Route path="/shop" element={<PageTransition><ShopPage /></PageTransition>} />
+            <Route path="/shop/:productId" element={<PageTransition><ProductDetailPage /></PageTransition>} />
+            <Route path="/cart" element={<PageTransition><CartPage /></PageTransition>} />
+            <Route path="/checkout" element={<PageTransition><CheckoutPage /></PageTransition>} />
+            <Route path="/checkout/success" element={<PageTransition><CheckoutSuccessPage /></PageTransition>} />
             <Route
               path="/tshirts"
-              element={<ComingSoonPage title="T-Shirts Collection" />}
+              element={<PageTransition><ComingSoonPage title="T-Shirts Collection" /></PageTransition>}
             />
             <Route
               path="/sweaters"
-              element={<ComingSoonPage title="Sweaters Collection" />}
+              element={<PageTransition><ComingSoonPage title="Sweaters Collection" /></PageTransition>}
             />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/shipping" element={<ComingSoonPage title="Shipping Info" />} />
-            <Route path="/returns" element={<ComingSoonPage title="Returns Policy" />} />
-            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/about" element={<PageTransition><AboutPage /></PageTransition>} />
+            <Route path="/shipping" element={<PageTransition><ComingSoonPage title="Shipping Info" /></PageTransition>} />
+            <Route path="/returns" element={<PageTransition><ComingSoonPage title="Returns Policy" /></PageTransition>} />
+            <Route path="/contact" element={<PageTransition><ContactPage /></PageTransition>} />
             <Route path="*" element={<Navigate replace to="/" />} />
           </Routes>
         </main>
