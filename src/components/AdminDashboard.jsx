@@ -189,6 +189,9 @@ function AdminDashboard() {
                       <div className="details-section">
                         <h4>Shipping Address</h4>
                         <p>{transaction.customerAddress}</p>
+                        {transaction.customerApartment && (
+                          <p className="details-section__sub">{transaction.customerApartment}</p>
+                        )}
                         <p>
                           {transaction.customerCity}, {transaction.customerProvince}{' '}
                           {transaction.customerPostalCode}

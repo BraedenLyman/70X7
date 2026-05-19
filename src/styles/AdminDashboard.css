@@ -279,6 +279,14 @@
   line-height: 1.5;
 }
 
+.details-section__sub {
+  color: #999;
+  font-size: 12px;
+  margin-bottom: 3px !important;
+  margin-left: 10px;
+  font-style: italic;
+}
+
 .items-list {
   display: flex;
   flex-direction: column;
