@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { useCart } from '../context/CartContext'
+import { useTransactions } from '../context/TransactionsContext'
 
 const GOOGLE_PLACES_API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY
 
@@ -85,6 +86,7 @@ function CheckoutPage() {
 function CheckoutForm({ items, subtotal, clientSecret, navigate }) {
   const stripe = useStripe()
   const elements = useElements()
+  const { addTransaction } = useTransactions()
   const [loading, setLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState(null)
   const [shippingData, setShippingData] = useState({
@@ -164,6 +166,27 @@ function CheckoutForm({ items, subtotal, clientSecret, navigate }) {
         setErrorMessage(error.message)
         setLoading(false)
       } else if (paymentIntent && paymentIntent.status === 'succeeded') {
+        // Save transaction to admin dashboard
+        addTransaction({
+          customerName: shippingData.name,
+          customerEmail: shippingData.email,
+          customerAddress: shippingData.address,
+          customerCity: shippingData.city,
+          customerProvince: shippingData.province,
+          customerPostalCode: shippingData.postal_code,
+          customerApartment: shippingData.apartment,
+          deliveryInstructions: shippingData.deliveryInstructions,
+          items: items.map((item) => ({
+            id: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            itemPrice: Number(item.price.replace(/[^0-9.]/g, '')),
+          })),
+          subtotal,
+          shippingCost: selectedShipping.amount,
+          shippingMethod: `${selectedShipping.provider} - ${selectedShipping.servicelevel}`,
+          paymentIntentId: paymentIntent.id,
+        })
         navigate('/checkout/success', { replace: true })
       }
     } catch (err) {
@@ -267,7 +290,7 @@ function CheckoutForm({ items, subtotal, clientSecret, navigate }) {
         `Total Dimensions: ${totalLength}×${totalWidth}×${totalHeight}cm`
       )
 
-      const response = await fetch('http://localhost:8787/api/calculate-shipping', {
+      const response = await fetch('/api/calculate-shipping', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -2849,3 +2849,8 @@
 .btn-add-to-cart.pulse {
   animation: buttonPulse 0.6s ease;
 }
+
+.admin-main-container {
+  flex: 1;
+  background: #0d0d0d;
+}

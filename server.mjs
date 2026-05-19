@@ -11,9 +11,30 @@ const __dirname = path.dirname(__filename)
 const distDir = path.join(__dirname, 'dist')
 const basePort = Number(process.env.PORT || 8787)
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY
+const nodeEnv = process.env.NODE_ENV || 'development'
 
 const stripe = stripeSecretKey ? new Stripe(stripeSecretKey) : null
 const shippoApiKey = process.env.SHIPPO_API_KEY
+
+// CORS origin configuration
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:8787',
+  'http://127.0.0.1:8787',
+  'https://70x7.ca',
+  'https://www.70x7.ca',
+]
+
+const getCorsOrigin = (requestOrigin) => {
+  if (nodeEnv === 'development') {
+    return 'http://localhost:5173'
+  }
+  if (allowedOrigins.includes(requestOrigin)) {
+    return requestOrigin
+  }
+  return 'https://70x7.ca'
+}
 
 const contentTypes = {
   '.css': 'text/css; charset=utf-8',
@@ -51,8 +72,12 @@ async function sendIndex(res) {
 const server = http.createServer(async (req, res) => {
   try {
     const method = req.method || 'GET'
-    const requestUrl = new URL(req.url || '/', 'http://localhost')
+    const host = req.headers.host || `localhost:${basePort}`
+    const protocol = req.headers['x-forwarded-proto'] || 'http'
+    const requestUrl = new URL(req.url || '/', `${protocol}://${host}`)
     const pathname = requestUrl.pathname.replace(/\/+$/, '') || '/'
+    const origin = req.headers.origin || `${protocol}://${host}`
+    const corsOrigin = getCorsOrigin(origin)
 
     console.log(`[${method}] ${pathname}`)
 
@@ -60,7 +85,7 @@ const server = http.createServer(async (req, res) => {
     if (method === 'OPTIONS' && pathname.startsWith('/api')) {
       console.log('Handling OPTIONS preflight')
       res.writeHead(204, {
-        'Access-Control-Allow-Origin': 'http://localhost:5173',
+        'Access-Control-Allow-Origin': corsOrigin,
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
       })
@@ -72,7 +97,7 @@ const server = http.createServer(async (req, res) => {
       if (!shippoApiKey) {
         res.writeHead(503, {
           'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': 'http://localhost:5173',
+          'Access-Control-Allow-Origin': corsOrigin,
         })
         res.end(
           JSON.stringify({
@@ -139,7 +164,7 @@ const server = http.createServer(async (req, res) => {
           if (!shipmentData.rates || shipmentData.rates.length === 0) {
             res.writeHead(200, {
               'Content-Type': 'application/json',
-              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Origin': corsOrigin,
             })
             res.end(JSON.stringify({ rates: [] }))
             return
@@ -157,13 +182,13 @@ const server = http.createServer(async (req, res) => {
 
           res.writeHead(200, {
             'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Origin': corsOrigin,
           })
           res.end(JSON.stringify({ rates }))
         } catch (err) {
           res.writeHead(500, {
             'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Origin': corsOrigin,
           })
           res.end(JSON.stringify({ error: err.message }))
         }
@@ -195,7 +220,7 @@ const server = http.createServer(async (req, res) => {
           if (!Array.isArray(items) || items.length === 0) {
             res.writeHead(400, {
               'Content-Type': 'application/json',
-              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Origin': corsOrigin,
             })
             res.end(JSON.stringify({ error: 'No items provided for payment intent.' }))
             return
@@ -216,13 +241,13 @@ const server = http.createServer(async (req, res) => {
 
           res.writeHead(200, {
             'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Origin': corsOrigin,
           })
           res.end(JSON.stringify({ clientSecret: paymentIntent.client_secret }))
         } catch (err) {
           res.writeHead(500, {
             'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Origin': corsOrigin,
           })
           res.end(JSON.stringify({ error: err.message }))
         }
@@ -262,7 +287,8 @@ const server = http.createServer(async (req, res) => {
 
 function startServer(port, attemptsLeft = 10) {
   server.listen(port, () => {
-    console.log(`Server listening on http://localhost:${port}`)
+    const host = nodeEnv === 'production' ? '70x7.ca' : `localhost:${port}`
+    console.log(`Server listening on ${nodeEnv === 'production' ? 'https' : 'http'}://${host}`)
   })
 
   server.once('error', (error) => {
