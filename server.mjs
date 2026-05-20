@@ -5,6 +5,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import Stripe from 'stripe'
 import 'dotenv/config'
+import { initializeMailService, sendOrderConfirmationEmail } from './mailService.mjs'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -196,6 +197,81 @@ const server = http.createServer(async (req, res) => {
       return
     }
 
+    if (method === 'GET' && pathname === '/api/send-test-email') {
+      const testEmail = requestUrl.searchParams.get('email') || 'braedenlyman7@gmail.com'
+
+      try {
+        const testOrderData = {
+          orderId: `TEST-${Date.now()}`,
+          customerName: 'Test Customer',
+          customerEmail: testEmail,
+          customerAddress: '123 Test Street',
+          customerApartment: 'Suite 100',
+          customerCity: 'Toronto',
+          customerProvince: 'ON',
+          customerPostalCode: 'M5V 3A8',
+          items: [
+            {
+              name: 'No Weapons Formed Against Me',
+              quantity: 1,
+              itemPrice: 40,
+            },
+            {
+              name: 'David & Goliath Fight',
+              quantity: 2,
+              itemPrice: 40,
+            },
+          ],
+          subtotal: 120,
+          shippingCost: 15.99,
+          shippingMethod: 'Canada Post - Regular Parcel',
+        }
+
+        await sendOrderConfirmationEmail(testOrderData)
+
+        res.writeHead(200, {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': corsOrigin,
+        })
+        res.end(JSON.stringify({
+          success: true,
+          message: `Test email sent to ${testEmail}`
+        }))
+      } catch (err) {
+        res.writeHead(500, {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': corsOrigin,
+        })
+        res.end(JSON.stringify({ error: err.message }))
+      }
+      return
+    }
+
+    if (method === 'POST' && pathname === '/api/send-order-confirmation') {
+      let body = ''
+      req.on('data', (chunk) => {
+        body += chunk
+      })
+      req.on('end', async () => {
+        try {
+          const orderData = JSON.parse(body)
+          await sendOrderConfirmationEmail(orderData)
+          res.writeHead(200, {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': corsOrigin,
+          })
+          res.end(JSON.stringify({ success: true }))
+        } catch (err) {
+          res.writeHead(500, {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': corsOrigin,
+          })
+          res.end(JSON.stringify({ error: err.message }))
+        }
+      })
+      return
+    }
+
     if (method === 'POST' && pathname === '/api/create-payment-intent') {
       if (!stripe) {
         res.writeHead(503, {
@@ -285,7 +361,10 @@ const server = http.createServer(async (req, res) => {
   }
 })
 
-function startServer(port, attemptsLeft = 10) {
+async function startServer(port, attemptsLeft = 10) {
+  // Initialize mail service
+  await initializeMailService()
+
   server.listen(port, () => {
     const host = nodeEnv === 'production' ? '70x7.ca' : `localhost:${port}`
     console.log(`Server listening on ${nodeEnv === 'production' ? 'https' : 'http'}://${host}`)

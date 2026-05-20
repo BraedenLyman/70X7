@@ -167,7 +167,7 @@ function CheckoutForm({ items, subtotal, clientSecret, navigate }) {
         setLoading(false)
       } else if (paymentIntent && paymentIntent.status === 'succeeded') {
         // Save transaction to admin dashboard
-        addTransaction({
+        const transaction = addTransaction({
           customerName: shippingData.name,
           customerEmail: shippingData.email,
           customerAddress: shippingData.address,
@@ -187,6 +187,35 @@ function CheckoutForm({ items, subtotal, clientSecret, navigate }) {
           shippingMethod: `${selectedShipping.provider} - ${selectedShipping.servicelevel}`,
           paymentIntentId: paymentIntent.id,
         })
+
+        // Send order confirmation email
+        try {
+          await fetch('/api/send-order-confirmation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              orderId: transaction.id,
+              customerName: shippingData.name,
+              customerEmail: shippingData.email,
+              customerAddress: shippingData.address,
+              customerApartment: shippingData.apartment,
+              customerCity: shippingData.city,
+              customerProvince: shippingData.province,
+              customerPostalCode: shippingData.postal_code,
+              items: items.map((item) => ({
+                name: item.name,
+                quantity: item.quantity,
+                itemPrice: Number(item.price.replace(/[^0-9.]/g, '')),
+              })),
+              subtotal,
+              shippingCost: selectedShipping.amount,
+              shippingMethod: `${selectedShipping.provider} - ${selectedShipping.servicelevel}`,
+            }),
+          })
+        } catch (emailErr) {
+          console.error('Failed to send confirmation email:', emailErr)
+        }
+
         navigate('/checkout/success', { replace: true })
       }
     } catch (err) {
