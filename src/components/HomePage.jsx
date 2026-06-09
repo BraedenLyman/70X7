@@ -82,7 +82,7 @@ function HomePage() {
                 <div className="hp-product-card__body">
                   <p className="hp-product-card__tag">{product.tag}</p>
                   <h2 className="hp-product-card__name">{product.name}</h2>
-                  <p className="hp-product-card__price">${product.price}</p>
+                  <p className="hp-product-card__price">{product.price}</p>
                   <div className="hp-product-card__actions">
                     <Link className="btn btn-primary" to={`/shop/${product.id}`}>
                       View Product
